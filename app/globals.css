@@ -60,6 +60,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   line-height: 1.65;
+  overflow-x: clip;
 }
 a {
   color: inherit;
@@ -161,6 +162,8 @@ input,
 select,
 textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 11px 13px;
   background: #fff;
   border: 1px solid var(--line-strong);
@@ -292,7 +295,8 @@ input::placeholder {
 
 /* ================= page + hero ================= */
 .page {
-  padding: 34px 0 72px;
+  padding-top: 34px;
+  padding-bottom: 72px;
 }
 .page-head {
   margin-bottom: 24px;
@@ -498,6 +502,16 @@ input::placeholder {
 }
 .matchup-date {
   max-width: 200px;
+}
+@media (max-width: 560px) {
+  .matchup-team {
+    min-width: 0;
+    flex: 1 1 40%;
+  }
+  .matchup-date {
+    max-width: none;
+    flex: 1 1 100%;
+  }
 }
 
 /* ================= toast ================= */
@@ -840,9 +854,16 @@ input::placeholder {
   font-size: 1rem;
   flex: none;
 }
-@media (max-width: 620px) {
+@media (max-width: 700px) {
+  .save-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .save-fields {
+    flex-direction: column;
+    align-items: stretch;
     justify-content: stretch;
+    min-width: 0;
   }
   .save-name {
     max-width: none;
