@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   applyPick,
   championOf,
@@ -68,7 +68,13 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
 
   const champion = championOf(pool.firstRound, picks);
   const actualChampion = championOf(pool.firstRound, pool.actual);
-  const needsName = Object.keys(picks).length > 0 && !name.trim();
+  const noPicks = Object.keys(picks).length === 0;
+  const promptName = !!champion && !name.trim();
+  const saveNote = !champion
+    ? "Pick a winner in every match to crown your champion."
+    : name.trim()
+      ? "Save to add your bracket to the group — your friends will see it and compare their picks against yours."
+      : "Add your name and save, so your friends can see your prediction in the group.";
   const anyResults = useMemo(
     () => Object.keys(pool.actual).length > 0,
     [pool.actual],
@@ -146,10 +152,6 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
       .catch(() => flash(url));
   }
 
-  const viewing = viewingId
-    ? pool.predictions.find((p) => p.id === viewingId)
-    : null;
-
   return (
     <div className="container page">
       <Link href="/wc2026" className="back-link">
@@ -181,9 +183,19 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           <div>
             <h2 style={{ fontSize: "1.15rem", margin: 0 }}>Your prediction</h2>
             <p className="muted" style={{ fontSize: "0.88rem", margin: "4px 0 0" }}>
-              Tap a team to send it through. Your final pick is the champion.
+              Build your bracket round by round. Your final pick is the champion.
             </p>
           </div>
+        </div>
+
+        <div className="pick-callout" role="note">
+          <span className="pick-callout-icon" aria-hidden>
+            👆
+          </span>
+          <span>
+            <strong>Tap a country</strong> in each match to send it through —
+            keep going until you crown a champion.
+          </span>
         </div>
 
         <Bracket
@@ -191,12 +203,13 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           picks={picks}
           rounds={rounds}
           mounted={mounted}
+          hint={noPicks}
           onPick={(r, i, team) =>
             setPicks((prev) => applyPick(pool.firstRound, prev, r, i, team))
           }
         />
 
-        <div className={"save-panel" + (needsName ? " highlight" : "")}>
+        <div className={"save-panel" + (promptName ? " pulse" : "")}>
           <div className="save-champ">
             <span className="trophy">🏆</span>
             <div>
@@ -212,10 +225,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           </div>
           <div className="save-fields">
             <div className="save-name">
-              <label htmlFor="predname">
-                Your name{" "}
-                {needsName && <span className="save-hint">← add this to save</span>}
-              </label>
+              <label htmlFor="predname">Your name</label>
               <input
                 id="predname"
                 placeholder="Type your name…"
@@ -231,6 +241,9 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
               {savingPred ? "Saving…" : "Save prediction"}
             </button>
           </div>
+          <p className={"save-note" + (promptName ? " save-note-active" : "")}>
+            {saveNote}
+          </p>
         </div>
       </section>
 
@@ -250,91 +263,113 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
             No predictions yet — be the first to fill in the bracket above.
           </p>
         ) : (
-          <table className="lb-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Champion pick</th>
-                {anyResults && <th style={{ textAlign: "right" }}>Correct</th>}
-                {anyResults && <th style={{ textAlign: "right" }}>Points</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.map(({ prediction: p, score }, i) => {
-                const champ = championOf(pool.firstRound, p.picks);
-                const isMe = myName && p.name.toLowerCase() === myName;
-                return (
-                  <tr
-                    key={p.id}
-                    className="lb-row"
-                    onClick={() =>
-                      setViewingId((cur) => (cur === p.id ? null : p.id))
-                    }
-                  >
-                    <td className="lb-rank">
-                      {anyResults
-                        ? i === 0
-                          ? "🥇"
-                          : i === 1
-                            ? "🥈"
-                            : i === 2
-                              ? "🥉"
-                              : i + 1
-                        : i + 1}
-                    </td>
-                    <td>
-                      <strong>{p.name}</strong>
-                      {isMe && <span className="tag">YOU</span>}
-                      {score.championCorrect && (
-                        <span className="tag gold">🏆</span>
+          <>
+            <p className="lb-hint muted">
+              Tap any row to expand it and see that player’s full bracket.
+            </p>
+            <table className="lb-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Champion pick</th>
+                  {anyResults && <th style={{ textAlign: "right" }}>Correct</th>}
+                  {anyResults && <th style={{ textAlign: "right" }}>Points</th>}
+                  <th aria-hidden="true" className="lb-expand-head"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map(({ prediction: p, score }, i) => {
+                  const champ = championOf(pool.firstRound, p.picks);
+                  const isMe = myName && p.name.toLowerCase() === myName;
+                  const open = viewingId === p.id;
+                  const cols = 4 + (anyResults ? 2 : 0);
+                  return (
+                    <Fragment key={p.id}>
+                      <tr
+                        className={"lb-row" + (open ? " is-open" : "")}
+                        onClick={() =>
+                          setViewingId((cur) => (cur === p.id ? null : p.id))
+                        }
+                        aria-expanded={open}
+                      >
+                        <td className="lb-rank">
+                          {anyResults
+                            ? i === 0
+                              ? "🥇"
+                              : i === 1
+                                ? "🥈"
+                                : i === 2
+                                  ? "🥉"
+                                  : i + 1
+                            : i + 1}
+                        </td>
+                        <td>
+                          <strong>{p.name}</strong>
+                          {isMe && <span className="tag">YOU</span>}
+                          {score.championCorrect && (
+                            <span className="tag gold">🏆</span>
+                          )}
+                        </td>
+                        <td>
+                          {champ ? (
+                            <span className="lb-champ">
+                              {flagFor(champ)} {champ}
+                            </span>
+                          ) : (
+                            <span className="muted">—</span>
+                          )}
+                        </td>
+                        {anyResults && (
+                          <td style={{ textAlign: "right" }}>{score.correct}</td>
+                        )}
+                        {anyResults && (
+                          <td
+                            style={{ textAlign: "right" }}
+                            className="rating-score"
+                          >
+                            {score.points}
+                          </td>
+                        )}
+                        <td className="lb-expand">
+                          <span className="lb-chevron" aria-hidden="true" />
+                        </td>
+                      </tr>
+                      {open && (
+                        <tr className="lb-detail-row">
+                          <td colSpan={cols}>
+                            <div className="lb-detail">
+                              <div className="lb-detail-head">
+                                <span className="lb-detail-title">
+                                  {p.name}’s bracket
+                                </span>
+                                <button
+                                  className="btn btn-sm btn-ghost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewingId(null);
+                                  }}
+                                >
+                                  Close
+                                </button>
+                              </div>
+                              <Bracket
+                                firstRound={pool.firstRound}
+                                picks={p.picks}
+                                rounds={rounds}
+                                mounted={mounted}
+                                result={anyResults ? pool : undefined}
+                              />
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td>
-                      {champ ? (
-                        <span className="lb-champ">
-                          {flagFor(champ)} {champ}
-                        </span>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                    {anyResults && (
-                      <td style={{ textAlign: "right" }}>{score.correct}</td>
-                    )}
-                    {anyResults && (
-                      <td style={{ textAlign: "right" }} className="rating-score">
-                        {score.points}
-                      </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-
-        {viewing && (
-          <div className="viewing-panel">
-            <div className="section-head" style={{ marginBottom: 8 }}>
-              <h3 style={{ margin: 0, fontSize: "1rem" }}>
-                {viewing.name}’s bracket
-              </h3>
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => setViewingId(null)}
-              >
-                Close
-              </button>
-            </div>
-            <Bracket
-              firstRound={pool.firstRound}
-              picks={viewing.picks}
-              rounds={rounds}
-              mounted={mounted}
-              result={anyResults ? pool : undefined}
-            />
-          </div>
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </>
         )}
       </section>
 
@@ -390,6 +425,20 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
         </section>
       )}
 
+      <section className="cta-banner">
+        <div className="cta-banner-body">
+          <span className="cta-eyebrow">🏆 Your own group</span>
+          <h2>Create your own prediction board</h2>
+          <p>
+            Set up a bracket for your friends in seconds, share one link, and
+            watch the leaderboard settle who really knows their football.
+          </p>
+        </div>
+        <Link href="/wc2026" className="btn btn-primary cta-banner-btn">
+          Create a board →
+        </Link>
+      </section>
+
       {toast && <div className="toast">{toast}</div>}
     </div>
   );
@@ -405,6 +454,7 @@ function Bracket({
   onPick,
   result,
   accent,
+  hint,
 }: {
   firstRound: FirstRoundMatch[];
   picks: Picks;
@@ -413,6 +463,7 @@ function Bracket({
   onPick?: (round: number, index: number, team: string) => void;
   result?: PublicPool;
   accent?: boolean;
+  hint?: boolean;
 }) {
   const n = firstRound.length;
   return (
@@ -435,6 +486,7 @@ function Bracket({
                   mounted={mounted}
                   onPick={onPick}
                   result={result}
+                  hint={hint}
                 />
               ))}
             </div>
@@ -459,6 +511,7 @@ function MatchCard({
   mounted,
   onPick,
   result,
+  hint,
 }: {
   firstRound: FirstRoundMatch[];
   picks: Picks;
@@ -467,6 +520,7 @@ function MatchCard({
   mounted: boolean;
   onPick?: (round: number, index: number, team: string) => void;
   result?: PublicPool;
+  hint?: boolean;
 }) {
   const [a, b] = teamsFor(firstRound, picks, round, index);
   const winner = picks[matchKey(round, index)];
@@ -478,6 +532,7 @@ function MatchCard({
     const resolved = result ? roundResolved(result, round) : false;
     const correct = selected && result ? isPickCorrect(result, round, team!) : false;
     const wrong = selected && resolved && !correct;
+    const hintable = !!hint && !!onPick && round === 0 && ready && !!team && !winner;
     return (
       <button
         type="button"
@@ -485,7 +540,8 @@ function MatchCard({
           "bracket-team" +
           (selected ? " sel" : "") +
           (correct ? " ok" : "") +
-          (wrong ? " no" : "")
+          (wrong ? " no" : "") +
+          (hintable ? " hint" : "")
         }
         disabled={!team || !onPick || !ready}
         onClick={() => team && ready && onPick?.(round, index, team)}
