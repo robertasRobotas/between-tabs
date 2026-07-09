@@ -562,15 +562,39 @@ input::placeholder {
 }
 .save-panel.pulse {
   border-color: var(--primary);
-  animation: panel-pulse 1.8s ease-in-out infinite;
+  animation: panel-pulse 1.5s ease-in-out infinite;
 }
 @keyframes panel-pulse {
   0%,
   100% {
+    border-color: var(--line-strong);
     box-shadow: 0 0 0 0 rgba(177, 87, 58, 0);
+    background: var(--surface-2);
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(177, 87, 58, 0.16);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 6px rgba(177, 87, 58, 0.26);
+    background: rgba(177, 87, 58, 0.06);
+  }
+}
+.save-btn.cta-pulse {
+  animation: cta-pulse 1.5s ease-in-out infinite;
+}
+@keyframes cta-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(177, 87, 58, 0);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(177, 87, 58, 0.3);
+    transform: scale(1.03);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .save-panel.pulse,
+  .save-btn.cta-pulse {
+    animation: none;
   }
 }
 .save-note {

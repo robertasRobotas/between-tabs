@@ -69,17 +69,26 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
   const champion = championOf(pool.firstRound, picks);
   const actualChampion = championOf(pool.firstRound, pool.actual);
   const noPicks = Object.keys(picks).length === 0;
-  const promptName = !!champion && !name.trim();
-  const saveNote = !champion
-    ? "Pick a winner in every match to crown your champion."
-    : name.trim()
-      ? "Save to add your bracket to the group — your friends will see it and compare their picks against yours."
-      : "Add your name and save, so your friends can see your prediction in the group.";
   const anyResults = useMemo(
     () => Object.keys(pool.actual).length > 0,
     [pool.actual],
   );
   const myName = name.trim().toLowerCase();
+
+  // Is the current bracket already saved (identically) under this name?
+  const savedMine = myName
+    ? pool.predictions.find((p) => p.name.toLowerCase() === myName)
+    : undefined;
+  const picksMatchSaved = !!savedMine && samePicks(savedMine.picks, picks);
+  // Draw attention to the save banner whenever there's an unsaved prediction.
+  const readyUnsaved = !!champion && !picksMatchSaved;
+  const saveNote = !champion
+    ? "Pick a winner in every match to crown your champion."
+    : picksMatchSaved
+      ? "Saved ✓ Your bracket is in the group — your friends can see and compare it."
+      : !name.trim()
+        ? "Add your name and save, so your friends can see your prediction in the group."
+        : "Hit save to lock in your bracket — your friends will see it and compare their picks against yours.";
 
   const leaderboard = useMemo(() => {
     return pool.predictions
@@ -209,7 +218,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           }
         />
 
-        <div className={"save-panel" + (promptName ? " pulse" : "")}>
+        <div className={"save-panel" + (readyUnsaved ? " pulse" : "")}>
           <div className="save-champ">
             <span className="trophy">🏆</span>
             <div>
@@ -234,14 +243,16 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
               />
             </div>
             <button
-              className="btn btn-primary save-btn"
+              className={
+                "btn btn-primary save-btn" + (readyUnsaved ? " cta-pulse" : "")
+              }
               onClick={savePrediction}
               disabled={savingPred}
             >
               {savingPred ? "Saving…" : "Save prediction"}
             </button>
           </div>
-          <p className={"save-note" + (promptName ? " save-note-active" : "")}>
+          <p className={"save-note" + (readyUnsaved ? " save-note-active" : "")}>
             {saveNote}
           </p>
         </div>
@@ -584,6 +595,13 @@ function ChampionCard({ picks, rounds }: { picks: Picks; rounds: number }) {
       )}
     </div>
   );
+}
+
+function samePicks(a: Picks, b: Picks): boolean {
+  const ak = Object.keys(a);
+  const bk = Object.keys(b);
+  if (ak.length !== bk.length) return false;
+  return ak.every((k) => a[k] === b[k]);
 }
 
 function formatDateTime(iso: string): string {
