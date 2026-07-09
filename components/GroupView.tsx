@@ -199,7 +199,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
 
         <div className="pick-callout" role="note">
           <span className="pick-callout-icon" aria-hidden>
-            👆
+            👇
           </span>
           <span>
             <strong>Tap a country</strong> in each match to send it through —
