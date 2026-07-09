@@ -3,7 +3,10 @@ import { MongoClient, Db } from "mongodb";
 // Cached MongoDB connection (survives dev hot reloads via globalThis).
 
 const uri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "wc2026";
+const dbName = process.env.MONGODB_DB || "behindtabs";
+
+/** Collection holding the World Cup 2026 prediction pools. */
+export const WC2026_COLLECTION = "wc2026";
 
 if (!uri) {
   throw new Error("MONGODB_URI is not set. Add it to .env.local.");
@@ -22,7 +25,9 @@ const clientPromise =
 async function ensureIndexes(db: Db): Promise<void> {
   if (!globalForMongo._mongoIndexesReady) {
     globalForMongo._mongoIndexesReady = (async () => {
-      await db.collection("pools").createIndex({ id: 1 }, { unique: true });
+      await db
+        .collection(WC2026_COLLECTION)
+        .createIndex({ id: 1 }, { unique: true });
     })().catch(() => {
       globalForMongo._mongoIndexesReady = undefined;
     });

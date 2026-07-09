@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import type { Document } from "mongodb";
-import { getDb } from "./mongo";
+import { getDb, WC2026_COLLECTION } from "./mongo";
 import type { Pool, PublicPool } from "./types";
 
 // strip Mongo's _id from query results
@@ -20,7 +20,7 @@ export function newAdminKey(): string {
 }
 
 async function pools() {
-  return (await getDb()).collection<Pool & Document>("pools");
+  return (await getDb()).collection<Pool & Document>(WC2026_COLLECTION);
 }
 
 /** Strip the admin secret before sending a pool to the browser. */
