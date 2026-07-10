@@ -34,7 +34,6 @@ export default function FootballPlayerPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [imgError, setImgError] = useState("");
-  const [removeBg, setRemoveBg] = useState(true);
   const [data, setData] = useState<CardData>(EXAMPLE);
   const [shareUrl, setShareUrl] = useState("");
   const [sharing, setSharing] = useState(false);
@@ -66,7 +65,7 @@ export default function FootballPlayerPage() {
     const objectUrl = URL.createObjectURL(blob);
     image.onload = () => {
       URL.revokeObjectURL(objectUrl);
-      setSubject(removeBg ? computeSubjectBox(image) : null);
+      setSubject(computeSubjectBox(image));
       setImg(image);
       setLoading(false);
       setStatus("");
@@ -84,22 +83,19 @@ export default function FootballPlayerPage() {
     setLoading(true);
     setImgError("");
     try {
-      let blob = input;
-      if (removeBg) {
-        setStatus("Removing background…");
-        const { removeBackground } = await import("@imgly/background-removal");
-        blob = await removeBackground(blob, {
-          progress: (key, current, total) => {
-            if (key.startsWith("fetch")) {
-              setStatus(
-                `Preparing model… ${Math.round((current / total) * 100)}%`,
-              );
-            } else {
-              setStatus("Removing background…");
-            }
-          },
-        });
-      }
+      setStatus("Removing background…");
+      const { removeBackground } = await import("@imgly/background-removal");
+      const blob = await removeBackground(input, {
+        progress: (key, current, total) => {
+          if (key.startsWith("fetch")) {
+            setStatus(
+              `Preparing model… ${Math.round((current / total) * 100)}%`,
+            );
+          } else {
+            setStatus("Removing background…");
+          }
+        },
+      });
       showBlob(blob);
     } catch (err) {
       setLoading(false);
@@ -240,14 +236,6 @@ export default function FootballPlayerPage() {
                 />
               </label>
             </div>
-            <label className="fp-check">
-              <input
-                type="checkbox"
-                checked={removeBg}
-                onChange={(e) => setRemoveBg(e.target.checked)}
-              />
-              <span>Automatically remove background (recommended)</span>
-            </label>
             {loading && status && <small className="fp-hint">{status}</small>}
             {imgError && <small className="fp-error">{imgError}</small>}
           </label>
