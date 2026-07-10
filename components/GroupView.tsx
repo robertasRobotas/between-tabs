@@ -6,63 +6,39 @@ import {
   applyPick,
   championOf,
   flagFor,
-  isPickCorrect,
-  matchesInRound,
-  matchKey,
   predictionStatus,
   roundCount,
-  roundName,
-  roundResolved,
   scorePrediction,
-  teamsFor,
 } from "@/lib/bracket";
-import { getAdminKey, saveAdminKey } from "@/lib/local";
-import type { FirstRoundMatch, PublicPool } from "@/lib/types";
+import Bracket from "@/components/Bracket";
+import type { PublicPool } from "@/lib/types";
 
 type Picks = Record<string, string>;
 const NAME_KEY = "wc2026-name";
 
-export default function GroupView({ initialPool }: { initialPool: PublicPool }) {
+export default function GroupView({
+  initialPool,
+  globalActual = {},
+}: {
+  initialPool: PublicPool;
+  globalActual?: Record<string, string>;
+}) {
   const [pool, setPool] = useState<PublicPool>(initialPool);
   const [toast, setToast] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [adminKey, setAdminKey] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [picks, setPicks] = useState<Picks>({});
   const [savingPred, setSavingPred] = useState(false);
 
-  const [actualDraft, setActualDraft] = useState<Picks>(pool.actual);
-  const [savingActual, setSavingActual] = useState(false);
-  const [organiserOpen, setOrganiserOpen] = useState(false);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
   const rounds = roundCount(pool.firstRound.length);
 
   useEffect(() => {
-    // one-time sync from external systems (localStorage) on mount
+    // one-time sync from localStorage (saved name) on mount
     /* eslint-disable react-hooks/set-state-in-effect */
     setMounted(true);
-    // Unlock organiser mode either from this browser's saved key, or from a
-    // shared organiser link (?key=...). The server still verifies the key on save.
-    let key = getAdminKey(pool.id);
-    try {
-      const url = new URL(window.location.href);
-      const urlKey = url.searchParams.get("key");
-      if (urlKey) {
-        saveAdminKey(pool.id, urlKey);
-        key = urlKey;
-        url.searchParams.delete("key");
-        window.history.replaceState(
-          {},
-          "",
-          url.pathname + url.search + url.hash,
-        );
-      }
-    } catch {
-      /* ignore */
-    }
-    setAdminKey(key);
     try {
       const savedName = localStorage.getItem(NAME_KEY) ?? "";
       if (savedName) {
@@ -79,20 +55,25 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isOrganiser = !!adminKey;
-
   function flash(msg: string) {
     setToast(msg);
     window.setTimeout(() => setToast((t) => (t === msg ? null : t)), 2400);
   }
 
-  const champion = championOf(pool.firstRound, picks);
-  const actualChampion = championOf(pool.firstRound, pool.actual);
-  const noPicks = Object.keys(picks).length === 0;
-  const anyResults = useMemo(
-    () => Object.keys(pool.actual).length > 0,
-    [pool.actual],
+  // Official WC 2026 results are global; any legacy per-pool results fill gaps.
+  const effectiveActual = useMemo(
+    () => ({ ...pool.actual, ...globalActual }),
+    [pool.actual, globalActual],
   );
+  const scorePool = useMemo(
+    () => ({ firstRound: pool.firstRound, actual: effectiveActual }),
+    [pool.firstRound, effectiveActual],
+  );
+
+  const champion = championOf(pool.firstRound, picks);
+  const actualChampion = championOf(pool.firstRound, effectiveActual);
+  const noPicks = Object.keys(picks).length === 0;
+  const anyResults = Object.keys(effectiveActual).length > 0;
   const myName = name.trim().toLowerCase();
 
   // Is the current bracket already saved (identically) under this name?
@@ -112,7 +93,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
 
   const leaderboard = useMemo(() => {
     return pool.predictions
-      .map((p) => ({ prediction: p, score: scorePrediction(pool, p) }))
+      .map((p) => ({ prediction: p, score: scorePrediction(scorePool, p) }))
       .sort((a, b) => {
         if (anyResults) {
           if (b.score.points !== a.score.points)
@@ -121,7 +102,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
         }
         return a.prediction.createdAt < b.prediction.createdAt ? 1 : -1;
       });
-  }, [pool, anyResults]);
+  }, [pool.predictions, scorePool, anyResults]);
 
   async function savePrediction() {
     if (!name.trim()) {
@@ -151,44 +132,11 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
     }
   }
 
-  async function saveResults() {
-    setSavingActual(true);
-    try {
-      const res = await fetch(`/api/pools/${pool.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-admin-key": adminKey ?? "",
-        },
-        body: JSON.stringify({ actual: actualDraft }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not save results.");
-      setPool(data.pool);
-      flash("Results updated ✔");
-    } catch (err) {
-      flash(err instanceof Error ? err.message : "Could not save results.");
-    } finally {
-      setSavingActual(false);
-    }
-  }
-
   function shareLink() {
     const url = window.location.href;
     navigator.clipboard
       ?.writeText(url)
       .then(() => flash("Link copied — share it with your friends!"))
-      .catch(() => flash(url));
-  }
-
-  function copyOrganiserLink() {
-    if (!adminKey) return;
-    const url = `${window.location.origin}${window.location.pathname}?key=${adminKey}`;
-    navigator.clipboard
-      ?.writeText(url)
-      .then(() =>
-        flash("Organiser link copied — open it on any device to enter results."),
-      )
       .catch(() => flash(url));
   }
 
@@ -298,13 +246,14 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
               · {pool.predictions.length}
             </span>
           </h2>
-          {!anyResults && <span className="badge">Results not in yet</span>}
+          {!anyResults && (
+            <span className="badge">Official results not in yet</span>
+          )}
         </div>
-        {isOrganiser && !anyResults && (
+        {!anyResults && (
           <p className="lb-hint muted" style={{ marginTop: 0 }}>
-            You’re the organiser — enter the real match winners in the{" "}
-            <strong>Organiser panel below</strong> (“Set results”) to score and
-            colour-code everyone.
+            Scores and colours update automatically as the real World Cup 2026
+            results come in — the same official results for every group.
           </p>
         )}
         {pool.predictions.length === 0 ? (
@@ -349,7 +298,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
                   const isMe = myName && p.name.toLowerCase() === myName;
                   const open = viewingId === p.id;
                   const cols = 4 + (anyResults ? 2 : 0);
-                  const status = predictionStatus(pool, p);
+                  const status = predictionStatus(scorePool, p);
                   const statusClass =
                     status === "eliminated"
                       ? " lb-red"
@@ -430,7 +379,7 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
                                 picks={p.picks}
                                 rounds={rounds}
                                 mounted={mounted}
-                                result={anyResults ? pool : undefined}
+                                result={anyResults ? scorePool : undefined}
                               />
                             </div>
                           </td>
@@ -444,68 +393,6 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           </>
         )}
       </section>
-
-      {/* ORGANISER */}
-      {isOrganiser && (
-        <section className="card card-pad">
-          <div
-            className="section-head"
-            style={{ marginBottom: organiserOpen ? 12 : 0 }}
-          >
-            <h2 style={{ fontSize: "1.15rem", margin: 0 }}>
-              🎛️ Organiser · actual results
-            </h2>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={copyOrganiserLink}
-              >
-                🔑 Organiser link
-              </button>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  setActualDraft(pool.actual);
-                  setOrganiserOpen((o) => !o);
-                }}
-              >
-                {organiserOpen ? "Hide" : "Set results"}
-              </button>
-            </div>
-          </div>
-          {organiserOpen && (
-            <>
-              <p className="muted" style={{ fontSize: "0.88rem" }}>
-                Tap the real winner of each match as the tournament plays out,
-                then <strong>Save results</strong> — the leaderboard re-scores
-                and re-colours everyone automatically. Use{" "}
-                <strong>Organiser link</strong> to enter results from another
-                device.
-              </p>
-              <Bracket
-                firstRound={pool.firstRound}
-                picks={actualDraft}
-                rounds={rounds}
-                mounted={mounted}
-                accent
-                onPick={(r, i, team) =>
-                  setActualDraft((prev) =>
-                    applyPick(pool.firstRound, prev, r, i, team),
-                  )
-                }
-              />
-              <button
-                className="btn btn-primary"
-                style={{ marginTop: 12 }}
-                onClick={saveResults}
-                disabled={savingActual}
-              >
-                {savingActual ? "Saving…" : "Save results"}
-              </button>
-            </>
-          )}
-        </section>
-      )}
 
       <section className="cta-banner">
         <div className="cta-banner-body">
@@ -526,147 +413,6 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
   );
 }
 
-// ---------------------------------------------------------------------------
-
-function Bracket({
-  firstRound,
-  picks,
-  rounds,
-  mounted,
-  onPick,
-  result,
-  accent,
-  hint,
-}: {
-  firstRound: FirstRoundMatch[];
-  picks: Picks;
-  rounds: number;
-  mounted: boolean;
-  onPick?: (round: number, index: number, team: string) => void;
-  result?: PublicPool;
-  accent?: boolean;
-  hint?: boolean;
-}) {
-  const n = firstRound.length;
-  return (
-    <div className="bracket-scroll">
-      <div
-        className={`bracket${accent ? " accent" : ""}`}
-        style={{ minHeight: n * 78 }}
-      >
-        {Array.from({ length: rounds }, (_, r) => (
-          <div className="bracket-col" key={r}>
-            <div className="bracket-col-head">{roundName(rounds, r)}</div>
-            <div className="bracket-col-body">
-              {Array.from({ length: matchesInRound(n, r) }, (_, i) => (
-                <MatchCard
-                  key={i}
-                  firstRound={firstRound}
-                  picks={picks}
-                  round={r}
-                  index={i}
-                  mounted={mounted}
-                  onPick={onPick}
-                  result={result}
-                  hint={hint}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-        <div className="bracket-col champion-col">
-          <div className="bracket-col-head">Champion</div>
-          <div className="bracket-col-body">
-            <ChampionCard picks={picks} rounds={rounds} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MatchCard({
-  firstRound,
-  picks,
-  round,
-  index,
-  mounted,
-  onPick,
-  result,
-  hint,
-}: {
-  firstRound: FirstRoundMatch[];
-  picks: Picks;
-  round: number;
-  index: number;
-  mounted: boolean;
-  onPick?: (round: number, index: number, team: string) => void;
-  result?: PublicPool;
-  hint?: boolean;
-}) {
-  const [a, b] = teamsFor(firstRound, picks, round, index);
-  const winner = picks[matchKey(round, index)];
-  const date = round === 0 ? firstRound[index]?.date : undefined;
-  const ready = a !== null && b !== null;
-
-  function row(team: string | null) {
-    const selected = !!team && winner === team;
-    const resolved = result ? roundResolved(result, round) : false;
-    const correct = selected && result ? isPickCorrect(result, round, team!) : false;
-    const wrong = selected && resolved && !correct;
-    const hintable = !!hint && !!onPick && round === 0 && ready && !!team && !winner;
-    return (
-      <button
-        type="button"
-        className={
-          "bracket-team" +
-          (selected ? " sel" : "") +
-          (correct ? " ok" : "") +
-          (wrong ? " no" : "") +
-          (hintable ? " hint" : "")
-        }
-        disabled={!team || !onPick || !ready}
-        onClick={() => team && ready && onPick?.(round, index, team)}
-      >
-        <span className="flag">{team ? flagFor(team) : "·"}</span>
-        <span className="tname">{team ?? "TBD"}</span>
-        {correct && <span className="rmark ok">✓</span>}
-        {wrong && <span className="rmark no">✕</span>}
-      </button>
-    );
-  }
-
-  return (
-    <div className={"bracket-match" + (!ready ? " locked" : "")}>
-      {row(a)}
-      {row(b)}
-      {!ready && onPick && (
-        <span className="bracket-lock">🔒 Awaiting both teams</span>
-      )}
-      {date && (
-        <span className="bracket-date" suppressHydrationWarning>
-          {mounted ? formatDateTime(date) : ""}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function ChampionCard({ picks, rounds }: { picks: Picks; rounds: number }) {
-  const champ = picks[matchKey(rounds - 1, 0)];
-  return (
-    <div className={`bracket-champion${champ ? " has" : ""}`}>
-      <span className="trophy">🏆</span>
-      {champ ? (
-        <span className="tname">
-          {flagFor(champ)} {champ}
-        </span>
-      ) : (
-        <span className="muted">TBD</span>
-      )}
-    </div>
-  );
-}
 
 function samePicks(a: Picks, b: Picks): boolean {
   const ak = Object.keys(a);
@@ -675,14 +421,3 @@ function samePicks(a: Picks, b: Picks): boolean {
   return ak.every((k) => a[k] === b[k]);
 }
 
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
