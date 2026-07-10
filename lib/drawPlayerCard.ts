@@ -188,7 +188,10 @@ export function drawPlayerCard(
     drawSubject(ctx, img, subject);
   }
 
-  // vertical country code (right edge)
+  // right-edge rail: flag badge above the vertical country code, same axis
+  const railX = 980;
+
+  // vertical country code
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -199,12 +202,12 @@ export function drawPlayerCard(
   const startY = 940;
   letters.forEach((ch, i) => {
     ctx.font = '900 104px "Arial Black", Arial, sans-serif';
-    ctx.fillText(ch, 985, startY + i * 96);
+    ctx.fillText(ch, railX, startY + i * 96);
   });
   ctx.restore();
 
   // flag badge
-  const fx = 940;
+  const fx = railX;
   const fy = 820;
   const fr = 66;
   ctx.save();
