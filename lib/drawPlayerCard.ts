@@ -1,4 +1,5 @@
 import { countryByName } from "@/lib/football";
+import { FIFA_LOGO_RATIO } from "@/lib/fifaLogo";
 
 export const CARD_W = 1080;
 export const CARD_H = 1440;
@@ -34,30 +35,6 @@ function roundRect(
   ctx.arcTo(x, y + h, x, y, rr);
   ctx.arcTo(x, y, x + w, y, rr);
   ctx.closePath();
-}
-
-function drawTrophy(ctx: CanvasRenderingContext2D, cx: number, topY: number) {
-  ctx.save();
-  ctx.fillStyle = "#ffffff";
-  // bowl / cup
-  ctx.beginPath();
-  ctx.moveTo(cx - 46, topY);
-  ctx.bezierCurveTo(cx - 46, topY + 74, cx - 22, topY + 104, cx - 10, topY + 132);
-  ctx.lineTo(cx + 10, topY + 132);
-  ctx.bezierCurveTo(cx + 22, topY + 104, cx + 46, topY + 74, cx + 46, topY);
-  ctx.closePath();
-  ctx.fill();
-  // stem + base
-  ctx.fillRect(cx - 12, topY + 132, 24, 26);
-  roundRect(ctx, cx - 40, topY + 158, 80, 20, 8);
-  ctx.fill();
-  // FIFA wordmark
-  ctx.fillStyle = "#ffffff";
-  ctx.font = '800 34px Arial, sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText("FIFA", cx, topY + 214);
-  ctx.restore();
 }
 
 function drawPanini(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -167,6 +144,7 @@ export function drawPlayerCard(
   data: CardData,
   img: HTMLImageElement | null,
   subject: SubjectBox | null = null,
+  logo: HTMLImageElement | null = null,
 ) {
   const c = countryByName(data.country);
 
@@ -184,14 +162,26 @@ export function drawPlayerCard(
   // big "26" backdrop
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  ctx.font = '900 760px "Arial Black", Arial, sans-serif';
-  ctx.fillStyle = c.c1;
-  ctx.fillText("2", -10, 660);
-  ctx.fillStyle = c.c2;
-  ctx.fillText("6", 545, 660);
+  ctx.font = '900 1000px "Arial Black", "Arial Bold", Arial, sans-serif';
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 60; // stroke on top of fill to fatten the glyphs
+  ctx.fillStyle = ctx.strokeStyle = c.c1;
+  ctx.strokeText("2", -60, 700);
+  ctx.fillText("2", -60, 700);
+  ctx.fillStyle = ctx.strokeStyle = c.c2;
+  ctx.strokeText("6", 300, 1180);
+  ctx.fillText("6", 300, 1180);
+  if (c.square) {
+    ctx.fillStyle = c.square;
+    ctx.fillRect(430, 470, 160, 160);
+  }
 
-  // FIFA trophy (top-right)
-  drawTrophy(ctx, 928, 96);
+  // official FIFA World Cup 26 emblem (top-right)
+  if (logo) {
+    const lw = 150;
+    const lh = lw * FIFA_LOGO_RATIO;
+    ctx.drawImage(logo, CARD_W - lw - 70, 70, lw, lh);
+  }
 
   // player photo, size-normalised and anchored to the bottom
   if (img) {

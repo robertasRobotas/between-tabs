@@ -10,6 +10,7 @@ import {
   type CardData,
   type SubjectBox,
 } from "@/lib/drawPlayerCard";
+import { FIFA_LOGO_URL } from "@/lib/fifaLogo";
 
 const EXAMPLE: CardData = {
   firstName: "Luka",
@@ -26,6 +27,7 @@ export default function FootballPlayerPage() {
   const [url, setUrl] = useState("");
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [subject, setSubject] = useState<SubjectBox | null>(null);
+  const [logo, setLogo] = useState<HTMLImageElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [imgError, setImgError] = useState("");
@@ -38,8 +40,15 @@ export default function FootballPlayerPage() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawPlayerCard(ctx, data, img, subject);
-  }, [data, img, subject]);
+    drawPlayerCard(ctx, data, img, subject, logo);
+  }, [data, img, subject, logo]);
+
+  // preload the FIFA 26 emblem once
+  useEffect(() => {
+    const image = new Image();
+    image.onload = () => setLogo(image);
+    image.src = FIFA_LOGO_URL;
+  }, []);
 
   function set<K extends keyof CardData>(key: K, value: CardData[K]) {
     setData((d) => ({ ...d, [key]: value }));
