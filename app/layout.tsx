@@ -94,9 +94,9 @@ export default function RootLayout({
                 </Link>
               ))}
             </nav>
-            <a href={site.social.rss} className="btn btn-sm btn-ghost">
-              Subscribe
-            </a>
+            <Link href="/interact-with-news" className="btn btn-sm btn-ghost">
+              Interact with news
+            </Link>
           </div>
         </header>
 

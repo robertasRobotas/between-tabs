@@ -29,7 +29,7 @@
   --shadow: 0 1px 2px rgba(20, 20, 25, 0.04), 0 8px 24px rgba(20, 20, 25, 0.05);
   --shadow-sm: 0 1px 2px rgba(20, 20, 25, 0.05);
 
-  --maxw: 960px;
+  --maxw: 1600px;
 
   --font-display: var(--font-display, "Space Grotesk"), ui-sans-serif, system-ui,
     sans-serif;
@@ -87,7 +87,12 @@ p {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 48px;
+}
+@media (max-width: 720px) {
+  .container {
+    padding: 0 20px;
+  }
 }
 
 /* ================= buttons ================= */
@@ -1348,6 +1353,58 @@ a.tab-chip:hover {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--muted);
+}
+
+/* ---------- interact-with-news tabs ---------- */
+.interact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 12px;
+}
+.interact-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  padding: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+.interact-tab:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+.interact-tab:hover .interact-go {
+  color: var(--primary);
+}
+.interact-tab h2 {
+  font-size: 1.9rem;
+  margin: 0 0 12px;
+}
+.interact-tab p {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 0 0 24px;
+}
+.interact-go {
+  margin-top: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+@media (max-width: 560px) {
+  .interact-tab {
+    padding: 28px;
+    min-height: 0;
+  }
+  .interact-tab h2 {
+    font-size: 1.5rem;
+  }
 }
 
 /* ---------- filter bar ---------- */

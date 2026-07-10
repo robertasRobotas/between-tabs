@@ -17,9 +17,8 @@ export default function Home() {
           {site.tagline}
         </span>
         <h1 className="home-hero-title">
-          BehindTabs explores the real-world impact of{" "}
-          <span className="grad">SaaS, AI tools, developer tools</span>, and
-          internet products.
+          Real world impact from{" "}
+          <span className="grad">ordinary developers</span>.
         </h1>
         <p className="home-hero-lead">
           Not hype. Not another list of tools. We focus on software that changes
