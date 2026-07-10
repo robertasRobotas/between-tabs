@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image, { type StaticImageData } from "next/image";
 import wc2026Knockout from "@/assets/real-world/images/wc2026knockout.webp";
+import wc26PlayerCards from "@/assets/real-world/images/wc26playerCards.webp";
 
 export const metadata: Metadata = {
   title: "Interact with news",
@@ -18,6 +19,13 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
+  {
+    href: "/football-player",
+    label: "Football player card",
+    description:
+      "Turn any player photo into a collectible-style card and download it.",
+    image: wc26PlayerCards,
+  },
   {
     href: "/wc2026",
     label: "World Cup 2026",

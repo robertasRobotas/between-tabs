@@ -1444,6 +1444,95 @@ a.tab-chip:hover {
   }
 }
 
+/* ---------- football player card generator ---------- */
+.fp-layout {
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  gap: 40px;
+  align-items: start;
+}
+.fp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.fp-field {
+  margin: 0;
+}
+.fp-field > span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+.fp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.fp-row-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.fp-url-row {
+  display: flex;
+  gap: 8px;
+}
+.fp-url-row input {
+  flex: 1;
+}
+.fp-url-row .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.fp-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.fp-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+.fp-check input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+.fp-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #d92d20;
+}
+.fp-preview {
+  position: sticky;
+  top: 24px;
+}
+.fp-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+}
+@media (max-width: 860px) {
+  .fp-layout {
+    grid-template-columns: 1fr;
+  }
+  .fp-preview {
+    position: static;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+}
+
 /* ---------- filter bar ---------- */
 .filter-bar {
   display: flex;
