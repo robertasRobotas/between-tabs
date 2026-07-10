@@ -17,6 +17,9 @@ export type CardData = {
   height: string;
   weight: string;
   club: string;
+  atk: string;
+  def: string;
+  speed: string;
 };
 
 function roundRect(
@@ -186,6 +189,36 @@ export function drawPlayerCard(
   // player photo, size-normalised and anchored to the bottom
   if (img) {
     drawSubject(ctx, img, subject);
+  }
+
+  // stat box (top-left): ATK / DEF / SPEED
+  {
+    const stats: [string, string][] = [
+      ["ATK", data.atk],
+      ["DEF", data.def],
+      ["SPEED", data.speed],
+    ];
+    const px = 48;
+    const py = 56;
+    const pw = 210;
+    const rowH = 50;
+    const pad = 16;
+    const ph = stats.length * rowH + pad;
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    roundRect(ctx, px, py, pw, ph, 18);
+    ctx.fill();
+    ctx.textBaseline = "middle";
+    stats.forEach(([label, value], i) => {
+      const cy = py + pad / 2 + rowH / 2 + i * rowH;
+      ctx.textAlign = "left";
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = '700 27px Arial, sans-serif';
+      ctx.fillText(label, px + 20, cy);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = '800 33px Arial, sans-serif';
+      ctx.fillText((value || "").trim(), px + pw - 20, cy);
+    });
   }
 
   // right-edge rail: flag badge above the vertical country code, same axis

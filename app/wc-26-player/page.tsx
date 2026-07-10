@@ -20,6 +20,9 @@ const EXAMPLE: CardData = {
   height: "1,73m",
   weight: "65 kg",
   club: "AC Milan (ITA)",
+  atk: "90",
+  def: "90",
+  speed: "90",
 };
 
 export default function FootballPlayerPage() {
@@ -275,6 +278,33 @@ export default function FootballPlayerPage() {
               onChange={(e) => set("club", e.target.value)}
             />
           </label>
+
+          <div className="fp-row fp-row-3">
+            <label className="fp-field">
+              <span>ATK</span>
+              <input
+                type="number"
+                value={data.atk}
+                onChange={(e) => set("atk", e.target.value)}
+              />
+            </label>
+            <label className="fp-field">
+              <span>DEF</span>
+              <input
+                type="number"
+                value={data.def}
+                onChange={(e) => set("def", e.target.value)}
+              />
+            </label>
+            <label className="fp-field">
+              <span>SPEED</span>
+              <input
+                type="number"
+                value={data.speed}
+                onChange={(e) => set("speed", e.target.value)}
+              />
+            </label>
+          </div>
 
           <button type="button" className="btn btn-primary" onClick={download}>
             Download card ↓
