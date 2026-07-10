@@ -193,6 +193,66 @@ export function roundResolved(pool: Scoreable, round: number): boolean {
   return advancers(pool.actual, pool.firstRound.length, round).size > 0;
 }
 
+/** Is `team` already knocked out according to the actual results? */
+export function isEliminated(pool: Scoreable, team: string): boolean {
+  const n = pool.firstRound.length;
+  const rounds = roundCount(n);
+  for (let r = 0; r < rounds; r++) {
+    for (let i = 0; i < matchesInRound(n, r); i++) {
+      const winner = pool.actual[matchKey(r, i)];
+      if (!winner) continue;
+      const [a, b] = teamsFor(pool.firstRound, pool.actual, r, i);
+      if ((a === team || b === team) && winner !== team) return true;
+    }
+  }
+  return false;
+}
+
+export type PredictionStatus =
+  | "unscored" // no results entered yet
+  | "onTrack" // every resolved pick still correct
+  | "behind" // at least one pick has lost, but the champion is still alive
+  | "eliminated"; // the predicted champion is already knocked out
+
+/**
+ * How a prediction is faring against the actual results so far:
+ * - `eliminated` — their champion pick is already out (worst case)
+ * - `behind` — a pick has already lost, but their champion survives
+ * - `onTrack` — nothing they picked has lost yet
+ */
+export function predictionStatus(
+  pool: Scoreable,
+  prediction: Prediction,
+): PredictionStatus {
+  const n = pool.firstRound.length;
+  const rounds = roundCount(n);
+
+  let anyResults = false;
+  for (let r = 0; r < rounds; r++) {
+    if (advancers(pool.actual, n, r).size > 0) {
+      anyResults = true;
+      break;
+    }
+  }
+  if (!anyResults) return "unscored";
+
+  const champion = championOf(pool.firstRound, prediction.picks);
+  if (champion && isEliminated(pool, champion)) return "eliminated";
+
+  // Only judge matches that actually have a result. A pick is "behind" if the
+  // player named a winner for a resolved match and that team didn't win it.
+  for (let r = 0; r < rounds; r++) {
+    for (let i = 0; i < matchesInRound(n, r); i++) {
+      const key = matchKey(r, i);
+      const actualWinner = pool.actual[key];
+      if (!actualWinner) continue;
+      const userPick = prediction.picks[key];
+      if (userPick && userPick !== actualWinner) return "behind";
+    }
+  }
+  return "onTrack";
+}
+
 /**
  * Set a winner for match (round,index) in a pick-set and prune any downstream
  * picks that reference a team which is no longer in that later match.

@@ -9,13 +9,14 @@ import {
   isPickCorrect,
   matchesInRound,
   matchKey,
+  predictionStatus,
   roundCount,
   roundName,
   roundResolved,
   scorePrediction,
   teamsFor,
 } from "@/lib/bracket";
-import { getAdminKey } from "@/lib/local";
+import { getAdminKey, saveAdminKey } from "@/lib/local";
 import type { FirstRoundMatch, PublicPool } from "@/lib/types";
 
 type Picks = Record<string, string>;
@@ -42,7 +43,26 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
     // one-time sync from external systems (localStorage) on mount
     /* eslint-disable react-hooks/set-state-in-effect */
     setMounted(true);
-    setAdminKey(getAdminKey(pool.id));
+    // Unlock organiser mode either from this browser's saved key, or from a
+    // shared organiser link (?key=...). The server still verifies the key on save.
+    let key = getAdminKey(pool.id);
+    try {
+      const url = new URL(window.location.href);
+      const urlKey = url.searchParams.get("key");
+      if (urlKey) {
+        saveAdminKey(pool.id, urlKey);
+        key = urlKey;
+        url.searchParams.delete("key");
+        window.history.replaceState(
+          {},
+          "",
+          url.pathname + url.search + url.hash,
+        );
+      }
+    } catch {
+      /* ignore */
+    }
+    setAdminKey(key);
     try {
       const savedName = localStorage.getItem(NAME_KEY) ?? "";
       if (savedName) {
@@ -161,6 +181,17 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
       .catch(() => flash(url));
   }
 
+  function copyOrganiserLink() {
+    if (!adminKey) return;
+    const url = `${window.location.origin}${window.location.pathname}?key=${adminKey}`;
+    navigator.clipboard
+      ?.writeText(url)
+      .then(() =>
+        flash("Organiser link copied — open it on any device to enter results."),
+      )
+      .catch(() => flash(url));
+  }
+
   return (
     <div className="container page">
       <Link href="/wc2026" className="back-link">
@@ -269,6 +300,13 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
           </h2>
           {!anyResults && <span className="badge">Results not in yet</span>}
         </div>
+        {isOrganiser && !anyResults && (
+          <p className="lb-hint muted" style={{ marginTop: 0 }}>
+            You’re the organiser — enter the real match winners in the{" "}
+            <strong>Organiser panel below</strong> (“Set results”) to score and
+            colour-code everyone.
+          </p>
+        )}
         {pool.predictions.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
             No predictions yet — be the first to fill in the bracket above.
@@ -278,6 +316,22 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
             <p className="lb-hint muted">
               Tap any row to expand it and see that player’s full bracket.
             </p>
+            {anyResults && (
+              <div className="lb-legend">
+                <span className="lb-legend-item">
+                  <span className="lb-swatch lb-swatch-red" />
+                  Champion knocked out
+                </span>
+                <span className="lb-legend-item">
+                  <span className="lb-swatch lb-swatch-orange" />
+                  Champion can still win, but not your way
+                </span>
+                <span className="lb-legend-item">
+                  <span className="lb-swatch lb-swatch-white" />
+                  Everything still on track
+                </span>
+              </div>
+            )}
             <table className="lb-table">
               <thead>
                 <tr>
@@ -295,10 +349,17 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
                   const isMe = myName && p.name.toLowerCase() === myName;
                   const open = viewingId === p.id;
                   const cols = 4 + (anyResults ? 2 : 0);
+                  const status = predictionStatus(pool, p);
+                  const statusClass =
+                    status === "eliminated"
+                      ? " lb-red"
+                      : status === "behind"
+                        ? " lb-orange"
+                        : "";
                   return (
                     <Fragment key={p.id}>
                       <tr
-                        className={"lb-row" + (open ? " is-open" : "")}
+                        className={"lb-row" + statusClass + (open ? " is-open" : "")}
                         onClick={() =>
                           setViewingId((cur) => (cur === p.id ? null : p.id))
                         }
@@ -394,22 +455,32 @@ export default function GroupView({ initialPool }: { initialPool: PublicPool }) 
             <h2 style={{ fontSize: "1.15rem", margin: 0 }}>
               🎛️ Organiser · actual results
             </h2>
-            <button
-              className="btn btn-sm btn-ghost"
-              onClick={() => {
-                setActualDraft(pool.actual);
-                setOrganiserOpen((o) => !o);
-              }}
-            >
-              {organiserOpen ? "Hide" : "Set results"}
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={copyOrganiserLink}
+              >
+                🔑 Organiser link
+              </button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  setActualDraft(pool.actual);
+                  setOrganiserOpen((o) => !o);
+                }}
+              >
+                {organiserOpen ? "Hide" : "Set results"}
+              </button>
+            </div>
           </div>
           {organiserOpen && (
             <>
               <p className="muted" style={{ fontSize: "0.88rem" }}>
-                Tap the real winner of each match as the tournament plays out.
-                The leaderboard re-scores everyone automatically. Only you (this
-                browser) can edit these.
+                Tap the real winner of each match as the tournament plays out,
+                then <strong>Save results</strong> — the leaderboard re-scores
+                and re-colours everyone automatically. Use{" "}
+                <strong>Organiser link</strong> to enter results from another
+                device.
               </p>
               <Bracket
                 firstRound={pool.firstRound}

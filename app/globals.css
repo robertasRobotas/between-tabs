@@ -932,6 +932,49 @@ input::placeholder {
   background: var(--surface-2);
   border-bottom-color: transparent;
 }
+/* status coloring — declared after :hover/.is-open so it wins at equal specificity */
+.lb-row.lb-red td {
+  background: rgba(214, 45, 45, 0.16);
+}
+.lb-row.lb-red:hover td {
+  background: rgba(214, 45, 45, 0.26);
+}
+.lb-row.lb-orange td {
+  background: rgba(240, 160, 25, 0.22);
+}
+.lb-row.lb-orange:hover td {
+  background: rgba(240, 160, 25, 0.32);
+}
+.lb-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: -4px 0 14px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.lb-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.lb-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+}
+.lb-swatch-red {
+  background: rgba(214, 45, 45, 0.55);
+  border-color: rgba(214, 45, 45, 0.7);
+}
+.lb-swatch-orange {
+  background: rgba(240, 160, 25, 0.65);
+  border-color: rgba(240, 160, 25, 0.8);
+}
+.lb-swatch-white {
+  background: #fff;
+}
 .lb-row.is-open .lb-chevron {
   transform: rotate(-135deg);
   border-color: var(--primary);
