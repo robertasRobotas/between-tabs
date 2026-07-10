@@ -33,6 +33,10 @@ export default function FootballPlayerPage() {
   const [imgError, setImgError] = useState("");
   const [removeBg, setRemoveBg] = useState(true);
   const [data, setData] = useState<CardData>(EXAMPLE);
+  const [shareUrl, setShareUrl] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // redraw whenever inputs or the photo change
   useEffect(() => {
@@ -130,6 +134,40 @@ export default function FootballPlayerPage() {
       link.click();
       URL.revokeObjectURL(link.href);
     }, "image/png");
+  }
+
+  async function createScratchLink() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setSharing(true);
+    setShareError("");
+    setShareUrl("");
+    setCopied(false);
+    try {
+      const png = canvas.toDataURL("image/png");
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ png }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Could not create link.");
+      setShareUrl(`${window.location.origin}/wc-26-player/${json.id}`);
+    } catch (err) {
+      setShareError(
+        err instanceof Error ? err.message : "Could not create link.",
+      );
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  function copyShare() {
+    if (!shareUrl) return;
+    navigator.clipboard?.writeText(shareUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
   }
 
   return (
@@ -241,6 +279,35 @@ export default function FootballPlayerPage() {
           <button type="button" className="btn btn-primary" onClick={download}>
             Download card ↓
           </button>
+
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={createScratchLink}
+            disabled={sharing}
+          >
+            {sharing ? "Creating link…" : "Create scratch link 🪙"}
+          </button>
+
+          {shareError && <small className="fp-error">{shareError}</small>}
+
+          {shareUrl && (
+            <div className="fp-share">
+              <p className="fp-hint">
+                Send this link — they&apos;ll scratch the card to reveal it:
+              </p>
+              <div className="fp-url-row">
+                <input readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary"
+                  onClick={copyShare}
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
 
         <div className="fp-preview">

@@ -20,7 +20,7 @@ type Tab = {
 
 const tabs: Tab[] = [
   {
-    href: "/football-player",
+    href: "/wc-26-player",
     label: "Football player card",
     description:
       "Turn any player photo into a collectible-style card and download it.",
