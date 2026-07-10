@@ -20,11 +20,6 @@ export default function Home() {
           Real world impact from{" "}
           <span className="grad">ordinary developers</span>.
         </h1>
-        <p className="home-hero-lead">
-          Not hype. Not another list of tools. We focus on software that changes
-          how people work, build, sell, support, learn, and operate in the real
-          world.
-        </p>
         <div className="hero-cta">
           <Link href="/blog" className="btn btn-primary">
             Read the articles

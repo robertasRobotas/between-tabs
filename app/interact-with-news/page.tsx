@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image, { type StaticImageData } from "next/image";
+import wc2026Knockout from "@/assets/real-world/images/wc2026knockout.webp";
 
 export const metadata: Metadata = {
   title: "Interact with news",
@@ -8,12 +10,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/interact-with-news" },
 };
 
-const tabs = [
+type Tab = {
+  href: string;
+  label: string;
+  description: string;
+  image?: StaticImageData;
+};
+
+const tabs: Tab[] = [
   {
     href: "/wc2026",
     label: "World Cup 2026",
     description:
-      "Follow the tournament with live coverage, results, and interactive tracking.",
+      "Create your bracket, make predictions, and share with your friends.",
+    image: wc2026Knockout,
   },
 ];
 
@@ -23,18 +33,26 @@ export default function InteractWithNewsPage() {
       <header className="page-head">
         <span className="eyebrow mono">Interactive</span>
         <h1>Interact with news.</h1>
-        <p className="page-lead">
-          Go beyond reading. Pick a topic below to explore live trackers,
-          predictions, and interactive coverage.
-        </p>
       </header>
 
       <div className="interact-grid">
         {tabs.map((tab) => (
           <Link key={tab.href} href={tab.href} className="interact-tab">
-            <h2>{tab.label}</h2>
-            <p>{tab.description}</p>
-            <span className="interact-go mono">Open →</span>
+            <div className="interact-tab-body">
+              <h2>{tab.label}</h2>
+              <p>{tab.description}</p>
+              <span className="interact-go mono">Open →</span>
+            </div>
+            {tab.image && (
+              <div className="interact-tab-media">
+                <Image
+                  src={tab.image}
+                  alt={tab.label}
+                  sizes="(max-width: 720px) 100vw, 40vw"
+                  priority
+                />
+              </div>
+            )}
           </Link>
         ))}
       </div>

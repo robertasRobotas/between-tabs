@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Space_Grotesk, Inter, Space_Mono } from "next/font/google";
 import { site } from "@/lib/site";
-import { categories } from "@/lib/categories";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -103,47 +102,14 @@ export default function RootLayout({
         <main>{children}</main>
 
         <footer className="site-footer">
-          <div className="container footer-inner">
-            <div className="footer-brand">
-              <Brand />
-              <p className="footer-tagline">{site.tagline}</p>
-              <p className="footer-blurb">
-                Technology beyond the browser — the real-world impact of SaaS, AI,
-                developer tools, and internet products.
-              </p>
-            </div>
-
-            <div className="footer-col">
-              <h4>Categories</h4>
-              <ul>
-                {categories.map((c) => (
-                  <li key={c.slug}>
-                    <Link href={`/category/${c.slug}`}>{c.name}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h4>BehindTabs</h4>
-              <ul>
-                <li>
-                  <Link href="/blog">All articles</Link>
-                </li>
-                <li>
-                  <Link href="/about">About</Link>
-                </li>
-                <li>
-                  <a href="/feed.xml">RSS feed</a>
-                </li>
-              </ul>
-            </div>
-          </div>
           <div className="container footer-base mono">
             <span>
               © {new Date().getFullYear()} {site.name}
             </span>
-            <span>{site.domain}</span>
+            <nav className="footer-links" aria-label="Footer">
+              <Link href="/blog">Articles</Link>
+              <Link href="/about">About</Link>
+            </nav>
           </div>
         </footer>
       </body>
