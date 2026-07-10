@@ -1491,6 +1491,20 @@ a.tab-chip:hover {
   font-size: 0.78rem;
   color: var(--muted);
 }
+.fp-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.fp-or {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.fp-upload-btn {
+  margin: 0;
+  cursor: pointer;
+}
 .fp-check {
   display: flex;
   align-items: center;

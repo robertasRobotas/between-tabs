@@ -80,21 +80,11 @@ export default function FootballPlayerPage() {
     image.src = objectUrl;
   }
 
-  async function loadPhoto() {
-    const trimmed = url.trim();
-    if (!trimmed) return;
+  async function processBlob(input: Blob) {
     setLoading(true);
     setImgError("");
-    setStatus("Fetching photo…");
     try {
-      const res = await fetch(
-        `/api/player-image?url=${encodeURIComponent(trimmed)}`,
-      );
-      if (!res.ok) {
-        throw new Error("Could not load that image. Check the URL is a direct image link.");
-      }
-      let blob = await res.blob();
-
+      let blob = input;
       if (removeBg) {
         setStatus("Removing background…");
         const { removeBackground } = await import("@imgly/background-removal");
@@ -110,8 +100,45 @@ export default function FootballPlayerPage() {
           },
         });
       }
-
       showBlob(blob);
+    } catch (err) {
+      setLoading(false);
+      setStatus("");
+      setImgError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong processing the image.",
+      );
+    }
+  }
+
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setImgError("Please choose an image file.");
+      return;
+    }
+    setStatus("Reading photo…");
+    await processBlob(file);
+  }
+
+  async function loadPhoto() {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setImgError("");
+    setStatus("Fetching photo…");
+    try {
+      const res = await fetch(
+        `/api/player-image?url=${encodeURIComponent(trimmed)}`,
+      );
+      if (!res.ok) {
+        throw new Error("Could not load that image. Check the URL is a direct image link.");
+      }
+      const blob = await res.blob();
+      await processBlob(blob);
     } catch (err) {
       setLoading(false);
       setStatus("");
@@ -199,6 +226,19 @@ export default function FootballPlayerPage() {
               >
                 {loading ? "Working…" : "Load"}
               </button>
+            </div>
+            <div className="fp-upload">
+              <span className="fp-or">or</span>
+              <label className="btn btn-ghost btn-sm fp-upload-btn">
+                Upload from device
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onFileChange}
+                  disabled={loading}
+                  hidden
+                />
+              </label>
             </div>
             <label className="fp-check">
               <input
