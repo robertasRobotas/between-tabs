@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Space_Grotesk, Inter, Space_Mono } from "next/font/google";
+import { Newsreader, Inter, IBM_Plex_Mono } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-const display = Space_Grotesk({
+const display = Newsreader({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display",
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--nf-display",
   display: "swap",
 });
 
 const body = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
+  variable: "--nf-body",
   display: "swap",
 });
 
-const mono = Space_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
+  weight: ["400", "500", "600", "700"],
+  variable: "--nf-mono",
   display: "swap",
 });
 
