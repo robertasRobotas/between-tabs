@@ -81,21 +81,69 @@ function drawPanini(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.restore();
 }
 
-function drawCover(
+export type SubjectBox = { x: number; y: number; w: number; h: number };
+
+// Find the tight bounding box of the non-transparent subject (the cut-out
+// player) so different photos can be normalised to a consistent size.
+export function computeSubjectBox(img: HTMLImageElement): SubjectBox | null {
+  const cv = document.createElement("canvas");
+  cv.width = img.width;
+  cv.height = img.height;
+  const ctx = cv.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(img, 0, 0);
+  let data: Uint8ClampedArray;
+  try {
+    data = ctx.getImageData(0, 0, cv.width, cv.height).data;
+  } catch {
+    return null; // tainted (shouldn't happen — same-origin blob)
+  }
+  let minX = cv.width,
+    minY = cv.height,
+    maxX = 0,
+    maxY = 0;
+  let found = false;
+  const alphaThreshold = 24;
+  // sample every 2px for speed
+  for (let y = 0; y < cv.height; y += 2) {
+    for (let x = 0; x < cv.width; x += 2) {
+      if (data[(y * cv.width + x) * 4 + 3] > alphaThreshold) {
+        found = true;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (!found) return null;
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+function drawSubject(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
+  box: SubjectBox | null,
 ) {
-  const scale = Math.max(w / img.width, h / img.height);
-  const dw = img.width * scale;
-  const dh = img.height * scale;
-  // centre horizontally, anchor to the bottom of the box
-  const dx = x + (w - dw) / 2;
-  const dy = y + h - dh;
-  ctx.drawImage(img, dx, dy, dw, dh);
+  // Fall back to whole image if we couldn't isolate the subject.
+  const b = box ?? { x: 0, y: 0, w: img.width, h: img.height };
+
+  // Target: subject fills ~92% of the card height and no more than the card
+  // width, anchored to the bottom centre.
+  const targetH = CARD_H * 0.92;
+  const maxW = CARD_W * 0.98;
+  const scale = Math.min(targetH / b.h, maxW / b.w);
+
+  const drawW = img.width * scale;
+  const drawH = img.height * scale;
+  const boxBottom = (b.y + b.h) * scale;
+  const boxCenterX = (b.x + b.w / 2) * scale;
+
+  // centre subject horizontally, sit its bottom at the card bottom
+  const dx = CARD_W / 2 - boxCenterX;
+  const dy = CARD_H - boxBottom;
+
+  ctx.drawImage(img, dx, dy, drawW, drawH);
 }
 
 function fitFont(
@@ -118,6 +166,7 @@ export function drawPlayerCard(
   ctx: CanvasRenderingContext2D,
   data: CardData,
   img: HTMLImageElement | null,
+  subject: SubjectBox | null = null,
 ) {
   const c = countryByName(data.country);
 
@@ -144,9 +193,9 @@ export function drawPlayerCard(
   // FIFA trophy (top-right)
   drawTrophy(ctx, 928, 96);
 
-  // player photo, anchored to the bottom
+  // player photo, size-normalised and anchored to the bottom
   if (img) {
-    drawCover(ctx, img, 70, 150, 940, CARD_H - 150);
+    drawSubject(ctx, img, subject);
   }
 
   // vertical country code (right edge)

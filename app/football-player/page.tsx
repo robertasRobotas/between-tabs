@@ -5,8 +5,10 @@ import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/football";
 import {
   CARD_H,
   CARD_W,
+  computeSubjectBox,
   drawPlayerCard,
   type CardData,
+  type SubjectBox,
 } from "@/lib/drawPlayerCard";
 
 const EXAMPLE: CardData = {
@@ -23,6 +25,7 @@ export default function FootballPlayerPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [url, setUrl] = useState("");
   const [img, setImg] = useState<HTMLImageElement | null>(null);
+  const [subject, setSubject] = useState<SubjectBox | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [imgError, setImgError] = useState("");
@@ -35,8 +38,8 @@ export default function FootballPlayerPage() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawPlayerCard(ctx, data, img);
-  }, [data, img]);
+    drawPlayerCard(ctx, data, img, subject);
+  }, [data, img, subject]);
 
   function set<K extends keyof CardData>(key: K, value: CardData[K]) {
     setData((d) => ({ ...d, [key]: value }));
@@ -47,6 +50,7 @@ export default function FootballPlayerPage() {
     const objectUrl = URL.createObjectURL(blob);
     image.onload = () => {
       URL.revokeObjectURL(objectUrl);
+      setSubject(removeBg ? computeSubjectBox(image) : null);
       setImg(image);
       setLoading(false);
       setStatus("");
