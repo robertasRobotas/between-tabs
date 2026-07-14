@@ -1728,7 +1728,7 @@ a.tab-chip:hover {
 }
 .fp-banner {
   position: relative;
-  margin: 0;
+  margin: 0 0 44px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   overflow: hidden;
