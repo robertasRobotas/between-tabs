@@ -200,9 +200,17 @@ export default function FootballPlayerPage() {
 
   return (
     <div className="container page fp-page">
-      <header className="page-head">
+      <header className="page-head fp-head">
         <span className="eyebrow mono">Card generator</span>
-        <h1>Football player card.</h1>
+        <h1>
+          Turn anyone into a <span className="grad">collectible card.</span>
+        </h1>
+        <p className="page-lead">
+          A star striker, your five-a-side captain, your mate, even your dog —
+          drop in any photo, tweak the stats, and walk away with a
+          World-Cup-2026-style card you can download or send. No Photoshop, no
+          sign-up.
+        </p>
       </header>
 
       <div className="fp-layout">
@@ -380,7 +388,7 @@ export default function FootballPlayerPage() {
         </div>
       </div>
 
-      <section className="fp-landing" aria-labelledby="fp-landing-title">
+      <section className="fp-landing" aria-label="How it works">
         <figure className="fp-banner">
           <NextImage
             src={exampleCards}
@@ -392,21 +400,6 @@ export default function FootballPlayerPage() {
             Made in seconds — one photo each, no design tools.
           </figcaption>
         </figure>
-
-        <div className="fp-landing-intro">
-          <span className="eyebrow mono">Why it&apos;s fun</span>
-          <h2 id="fp-landing-title">
-            Turn anyone into a{" "}
-            <span className="grad">collectible card.</span>
-          </h2>
-          <p className="fp-landing-lead">
-            A star striker, your five-a-side captain, your mate, even your dog —
-            drop in any photo, tweak the stats, and walk away with a
-            World-Cup-2026-style card you can download or send. No Photoshop, no
-            sign-up — the background is cut for you and the card updates as you
-            type.
-          </p>
-        </div>
 
         <ol className="fp-steps">
           <li className="fp-step">
