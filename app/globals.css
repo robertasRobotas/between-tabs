@@ -1228,6 +1228,17 @@ input::placeholder {
   padding: 76px 0 40px;
   max-width: 880px;
 }
+/* pre-launch: hero stands alone, so let it breathe and fill the fold */
+.home-hero--solo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100vh - 64px - 220px);
+  padding: 40px 0;
+}
+.home-hero--solo .home-hero-lead {
+  margin-bottom: 34px;
+}
 .home-hero .eyebrow {
   animation: hero-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
@@ -1470,19 +1481,6 @@ a.tab-chip:hover {
 .interact-chrome-path {
   letter-spacing: -0.01em;
 }
-/* loading bar sweeps across on hover, like a tab fetching a page */
-.interact-chrome-bar {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  width: 0;
-  background: var(--primary);
-  transition: width 0.55s cubic-bezier(0.3, 0.7, 0.2, 1);
-}
-.interact-tab:hover .interact-chrome-bar {
-  width: 100%;
-}
 
 .interact-tab-inner {
   display: flex;
@@ -1551,6 +1549,8 @@ a.tab-chip:hover {
   flex: 0 0 46%;
   min-height: 300px;
   border-left: 1px solid var(--line);
+  overflow: hidden;
+  background: #2c261d;
 }
 .interact-tab-media img {
   position: absolute;
@@ -1558,10 +1558,28 @@ a.tab-chip:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* muted but not flat — lets a bit of the source color through, kept cohesive */
+  filter: grayscale(0.5) sepia(0.12) saturate(1.05) brightness(1.03)
+    contrast(1.02);
   transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
+/* warm tint so all card images still read as one family */
+.interact-tab-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #453c2e;
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+  pointer-events: none;
+}
 .interact-tab:hover .interact-tab-media img {
-  transform: scale(1.03);
+  transform: scale(1.012);
+}
+@media (prefers-reduced-motion: reduce) {
+  .interact-tab-media img {
+    transition: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .interact-tab,
@@ -1701,6 +1719,140 @@ a.tab-chip:hover {
 }
 .fp-share .fp-hint {
   margin: 0 0 8px;
+}
+
+/* ---------- player-card feature landing ---------- */
+.fp-landing {
+  margin-top: 72px;
+  padding-top: 8px;
+}
+.fp-banner {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: #2c261d;
+}
+.fp-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fp-banner-cap {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(22, 24, 29, 0.82);
+  backdrop-filter: blur(6px);
+  color: #f4f4f1;
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+}
+.fp-landing-intro {
+  max-width: 680px;
+  margin: 44px 0 40px;
+}
+.fp-landing-intro h2 {
+  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  margin: 6px 0 0;
+}
+.fp-landing-lead {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.55;
+  color: #3b3e46;
+  margin: 16px 0 0;
+}
+.fp-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  counter-reset: none;
+}
+.fp-step {
+  padding: 26px 24px 24px;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.fp-step-no {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+.fp-step h3 {
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+}
+.fp-step p {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.fp-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  list-style: none;
+  margin: 0 0 40px;
+  padding: 0;
+}
+.fp-feature {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.fp-feature-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.fp-feature p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.fp-landing-cta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 28px 0 8px;
+  border-top: 1px solid var(--line);
+}
+.fp-landing-cta-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+@media (max-width: 860px) {
+  .fp-steps {
+    grid-template-columns: 1fr;
+  }
+  .fp-feature-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .fp-feature-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ---------- scratch card ---------- */

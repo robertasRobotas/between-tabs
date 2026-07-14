@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import NextImage from "next/image";
+import exampleCards from "@/assets/real-world/images/wc26playerCards.webp";
 import { COUNTRIES, DEFAULT_COUNTRY } from "@/lib/football";
 import {
   CARD_H,
@@ -377,6 +379,94 @@ export default function FootballPlayerPage() {
           />
         </div>
       </div>
+
+      <section className="fp-landing" aria-labelledby="fp-landing-title">
+        <figure className="fp-banner">
+          <NextImage
+            src={exampleCards}
+            alt="Example World Cup 2026 player cards for Messi, Mbappé, and Haaland"
+            sizes="(max-width: 1200px) 100vw, 1104px"
+            placeholder="blur"
+          />
+          <figcaption className="fp-banner-cap mono">
+            Made in seconds — one photo each, no design tools.
+          </figcaption>
+        </figure>
+
+        <div className="fp-landing-intro">
+          <span className="eyebrow mono">Why it&apos;s fun</span>
+          <h2 id="fp-landing-title">
+            Turn anyone into a{" "}
+            <span className="grad">collectible card.</span>
+          </h2>
+          <p className="fp-landing-lead">
+            A star striker, your five-a-side captain, your mate, even your dog —
+            drop in any photo, tweak the stats, and walk away with a
+            World-Cup-2026-style card you can download or send. No Photoshop, no
+            sign-up — the background is cut for you and the card updates as you
+            type.
+          </p>
+        </div>
+
+        <ol className="fp-steps">
+          <li className="fp-step">
+            <span className="fp-step-no mono">01</span>
+            <h3>Add a photo</h3>
+            <p>
+              Paste an image URL or upload from your device. The background is
+              removed automatically, right in your browser.
+            </p>
+          </li>
+          <li className="fp-step">
+            <span className="fp-step-no mono">02</span>
+            <h3>Fill in the details</h3>
+            <p>
+              Name, nation, club, and the ATK / DEF / SPEED ratings. The preview
+              redraws live with every keystroke.
+            </p>
+          </li>
+          <li className="fp-step">
+            <span className="fp-step-no mono">03</span>
+            <h3>Download or share</h3>
+            <p>
+              Save a high-res PNG, or generate a scratch-to-reveal link your
+              friends uncover coin by coin.
+            </p>
+          </li>
+        </ol>
+
+        <ul className="fp-feature-grid">
+          <li className="fp-feature">
+            <span className="fp-feature-tag mono">In-browser</span>
+            <p>Background removal runs on your device — your photo never leaves it.</p>
+          </li>
+          <li className="fp-feature">
+            <span className="fp-feature-tag mono">Every nation</span>
+            <p>Pick from all World Cup flags and colorways for the frame.</p>
+          </li>
+          <li className="fp-feature">
+            <span className="fp-feature-tag mono">Scratch links</span>
+            <p>Send a card as a coin-scratch surprise instead of a plain image.</p>
+          </li>
+          <li className="fp-feature">
+            <span className="fp-feature-tag mono">Free</span>
+            <p>No account, no watermark, no limits on how many you make.</p>
+          </li>
+        </ul>
+
+        <div className="fp-landing-cta">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() =>
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+          >
+            Make your card ↑
+          </button>
+          <span className="fp-landing-cta-note mono">Takes about a minute.</span>
+        </div>
+      </section>
     </div>
   );
 }

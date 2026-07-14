@@ -40,24 +40,31 @@ function roundRect(
   ctx.closePath();
 }
 
-function drawPanini(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  const w = 156;
+const BRAND_W = 250;
+
+function drawBrand(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  const w = BRAND_W;
   const h = 60;
   ctx.save();
-  // red frame
-  ctx.fillStyle = "#E2001A";
-  roundRect(ctx, x, y, w, h, 8);
+  // ink pill
+  ctx.fillStyle = "#16181D";
+  roundRect(ctx, x, y, w, h, 30);
   ctx.fill();
-  // yellow inner
-  ctx.fillStyle = "#FFCC00";
-  roundRect(ctx, x + 6, y + 6, w - 12, h - 12, 5);
-  ctx.fill();
-  // wordmark
-  ctx.fillStyle = "#0A2472";
-  ctx.font = 'italic 900 30px Arial, sans-serif';
-  ctx.textAlign = "center";
+  // "BEHIND" (white) + "TABS" (brand blue), centered together
+  const px = fitFont(ctx, "BEHINDTABS", w - 44, 30, "800");
+  ctx.font = `800 ${px}px Arial, sans-serif`;
   ctx.textBaseline = "middle";
-  ctx.fillText("PANINI", x + w / 2, y + h / 2 + 2);
+  ctx.textAlign = "left";
+  const first = "BEHIND";
+  const second = "TABS";
+  const firstW = ctx.measureText(first).width;
+  const totalW = firstW + ctx.measureText(second).width;
+  const startX = x + w / 2 - totalW / 2;
+  const midY = y + h / 2 + 1;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(first, startX, midY);
+  ctx.fillStyle = "#FFCC00";
+  ctx.fillText(second, startX + firstW, midY);
   ctx.restore();
 }
 
@@ -319,8 +326,8 @@ export function drawPlayerCard(
     ctx.fillText(club, clubX + clubW / 2, 1403);
   }
 
-  // Panini logo (bottom-right)
-  drawPanini(ctx, CARD_W - 200, 1372);
+  // BehindTabs brand mark (bottom-right)
+  drawBrand(ctx, CARD_W - 44 - BRAND_W, 1372);
 
   ctx.restore();
 }

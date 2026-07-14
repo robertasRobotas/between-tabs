@@ -68,7 +68,6 @@ export default function InteractWithNewsPage() {
             <span className="interact-chrome mono" aria-hidden>
               <span className="interact-chrome-dot" />
               <span className="interact-chrome-path">{tab.path}</span>
-              <span className="interact-chrome-bar" />
             </span>
 
             <div className="interact-tab-inner">
